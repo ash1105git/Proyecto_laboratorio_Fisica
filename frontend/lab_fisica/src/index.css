@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+body {
+  position: relative;
+  background-color: #f2f2f2;
+  margin: 0;
+  padding: 0;
+  color: #333333;
+  font-family: 'Inter', sans-serif;
+  /* Elimina background-image aquí */
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-image: url('./assets/background.jpg');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-attachment: fixed;
+  opacity: 0.5; /* Cambia este valor según la opacidad deseada */
+  z-index: -1;
+}
