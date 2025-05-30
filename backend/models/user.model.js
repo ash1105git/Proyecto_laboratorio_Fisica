@@ -1,5 +1,19 @@
-import mongoose  from "mongoose";
+import mongoose from "mongoose";
 
+/**
+ * Esquema para representar un usuario en el sistema.
+ * 
+ * Campos:
+ * - username: Nombre de usuario único y obligatorio, sin espacios al inicio o final.
+ * - lastName: Apellido del usuario, obligatorio y sin espacios al inicio o final.
+ * - documento: Documento de identificación obligatorio.
+ * - programa: Programa académico obligatorio solo si el tipo de usuario es 'student'.
+ * - typeUser: Tipo de usuario, obligatorio, solo puede ser 'admin', 'student' o 'professor'. Por defecto es 'student'.
+ * - email: Correo electrónico único, obligatorio, sin espacios al inicio o final.
+ * - password: Contraseña del usuario, obligatoria.
+ * 
+ * Incluye timestamps para registrar fecha de creación y actualización.
+ */
 const userSchema = new mongoose.Schema({
     username: {
         type: String,
@@ -17,11 +31,11 @@ const userSchema = new mongoose.Schema({
         required: true
     },
     programa: {
-    type: String,
-    required: function () {
-      return this.typeUser === 'student';
-    }
-  },
+        type: String,
+        required: function () {
+          return this.typeUser === 'student';
+        }
+    },
     typeUser: {
         type: String,
         required: true,
@@ -40,7 +54,6 @@ const userSchema = new mongoose.Schema({
     }
 }, {
     timestamps: true
-})
+});
 
-export default mongoose.model("User", userSchema)
-// export default mongoose.model("User", userSchema);
+export default mongoose.model("User", userSchema);

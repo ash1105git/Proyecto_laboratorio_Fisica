@@ -7,6 +7,12 @@ import fs from "fs";
 import mongoose from 'mongoose';
 import multer from 'multer';
 
+/**
+ * Crea un nuevo préstamo con detalles y actualiza las cantidades de los equipos.
+ * Valida que existan equipos seleccionados y que haya suficiente cantidad disponible.
+ * @param {Request} req - request con datos del préstamo y usuario autenticado (req.user).
+ * @param {Response} res - respuesta con el préstamo creado o error.
+ */
 export const createLoan = async (req, res) => {
   try {
     const { date_loan, date_due, details } = req.body;
@@ -60,6 +66,11 @@ export const createLoan = async (req, res) => {
   }
 };
 
+/**
+ * Obtiene todos los préstamos del usuario autenticado con sus detalles y equipos.
+ * @param {Request} req - request con usuario autenticado (req.user).
+ * @param {Response} res - respuesta con lista de préstamos o error.
+ */
 export const getLoansByUser = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -67,16 +78,15 @@ export const getLoansByUser = async (req, res) => {
     // Obtener los préstamos del usuario
     const loans = await Loan.find({ id_user: userId }).lean();
 
-    // Si no tiene préstamos
     if (!loans || loans.length === 0) {
       return res.status(404).json({ message: "No se encontraron préstamos para este usuario." });
     }
 
-    // Para cada préstamo, obtener sus detalles y equipos
+    // Obtener detalles y equipos para cada préstamo
     const loansWithDetails = await Promise.all(
       loans.map(async (loan) => {
         const details = await LoanDetail.find({ id_loan: loan._id })
-          .populate("id_equipment", "name description") // Puedes ajustar los campos
+          .populate("id_equipment", "name description")
           .lean();
 
         return {
@@ -93,20 +103,24 @@ export const getLoansByUser = async (req, res) => {
   }
 };
 
-
+/**
+ * Obtiene un préstamo específico por su ID junto con sus detalles y equipos.
+ * Valida que el usuario tenga permisos para ver el préstamo.
+ * @param {Request} req - request con parámetro id (req.params.id) y usuario autenticado.
+ * @param {Response} res - respuesta con préstamo detallado o error.
+ */
 export const getLoanById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Buscar el préstamo por ID y poblar detalles con info de equipos
-   const loan = await Loan.findById(id).lean();
+    const loan = await Loan.findById(id).lean();
     if (!loan) return res.status(404).json({ message: "Préstamo no encontrado" });
 
     if (req.user.typeUser !== 'admin' && loan.id_user.toString() !== req.user.id) {
       return res.status(403).json({ message: "Acceso denegado" });
     }
 
-      const details = await LoanDetail.find({ id_loan: id })
+    const details = await LoanDetail.find({ id_loan: id })
       .populate("id_equipment", "name description status quantity")
       .lean();
 
@@ -116,6 +130,12 @@ export const getLoanById = async (req, res) => {
   }
 };
 
+/**
+ * Actualiza el estado de un préstamo.
+ * Solo acepta estados válidos: pending, approved, returned, rejected.
+ * @param {Request} req - request con parámetro id y body con nuevo estado.
+ * @param {Response} res - respuesta con préstamo actualizado o error.
+ */
 export const updateLoanStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -140,39 +160,38 @@ export const updateLoanStatus = async (req, res) => {
   }
 };
 
-
-
+/**
+ * Marca un préstamo como devuelto, actualiza cantidades de equipos y fecha de retorno.
+ * Solo puede hacerlo el dueño del préstamo o un admin.
+ * @param {Request} req - request con parámetro id y usuario autenticado.
+ * @param {Response} res - respuesta con confirmación o error.
+ */
 export const returnLoan = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Validar si el ID es un ObjectId válido
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: "ID de préstamo no válido" });
     }
 
-    // Buscar el préstamo y poblar detalles
     const loan = await Loan.findById(id).populate('details');
     if (!loan) {
       return res.status(404).json({ message: "Préstamo no encontrado" });
     }
 
-    // Validar permisos: solo el dueño o un admin puede devolverlo
     if (req.user.typeUser !== 'admin' && loan.id_user.toString() !== req.user.id) {
       return res.status(403).json({ message: "Acceso denegado" });
     }
 
-    // Validar si ya fue devuelto
     if (loan.status === 'returned') {
       return res.status(400).json({ message: "El préstamo ya fue devuelto" });
     }
 
-    // Cambiar estado a devuelto
     loan.status = 'returned';
-    loan.date_returned = new Date(); // Registrar fecha de devolución
+    loan.date_returned = new Date();
     await loan.save();
 
-    // Actualizar cantidades de los equipos
+    // Actualizar cantidades de equipos
     for (const detail of loan.details) {
       const equipment = await Equipment.findById(detail.id_equipment);
       if (equipment) {
@@ -191,6 +210,13 @@ export const returnLoan = async (req, res) => {
   }
 };
 
+/**
+ * Genera un recibo PDF del préstamo con detalles, equipo y usuario.
+ * Permite descargar o visualizar el PDF en línea.
+ * Solo el usuario dueño o admin puede acceder.
+ * @param {Request} req - request con parámetro id y usuario autenticado.
+ * @param {Response} res - respuesta con PDF o error.
+ */
 export const generateLoanReceipt = async (req, res) => {
   try {
     const { id } = req.params;
@@ -223,15 +249,14 @@ export const generateLoanReceipt = async (req, res) => {
       }
     });
 
-        const logoPath = patch.resolve('utils/logo.png');
-        doc.image(logoPath, 50, 45, { width: 100 });
-        doc.moveDown(3);
+    const logoPath = patch.resolve('utils/logo.png');
+    doc.image(logoPath, 50, 45, { width: 100 });
+    doc.moveDown(3);
 
     doc.fontSize(16).text('Recibo de Préstamo de Equipos', { align: 'center', underline: true });
     doc.moveDown(1);
-        doc.fontSize(12).text(`Nombre del usuario: ${loan.id_user.username}`);
-doc.text(`Rol del usuario: ${loan.id_user.typeUser}`);
-doc.moveDown();
+    doc.fontSize(12).text(`Nombre del usuario: ${loan.id_user.username}`);
+    doc.text(`Rol del usuario: ${loan.id_user.typeUser}`);
     doc.moveDown(1);
 
     doc.text(`Fecha del préstamo: ${new Date(loan.date_loan).toLocaleDateString()}`);
@@ -264,59 +289,35 @@ doc.moveDown();
   }
 };
 
-
+/**
+ * Obtiene todos los préstamos con detalles y datos del usuario (solo admins).
+ * @param {Request} req - request con usuario autenticado.
+ * @param {Response} res - respuesta con lista de préstamos o error.
+ */
 export const getAllLoans = async (req, res) => {
   try {
+    if (req.user.typeUser !== 'admin') {
+      return res.status(403).json({ message: "Acceso denegado" });
+    }
+
     const loans = await Loan.find()
-      .populate({
-        path: 'details',
-        populate: { path: 'id_equipment' }
+      .populate('id_user', 'username email typeUser')
+      .lean();
+
+    const loansWithDetails = await Promise.all(
+      loans.map(async (loan) => {
+        const details = await LoanDetail.find({ id_loan: loan._id })
+          .populate('id_equipment', 'name description')
+          .lean();
+        return {
+          ...loan,
+          details
+        };
       })
-      .populate('id_user', 'username email typeUser') // para mostrar info del usuario
-      .exec();
-    res.json(loans);
+    );
+
+    res.json(loansWithDetails);
   } catch (error) {
-    res.status(500).json({ message: 'Error al obtener los préstamos', error: error.message });
-  }
-};
-
-export const approveLoan = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const loan = await Loan.findById(id);
-    if (!loan) {
-      return res.status(404).json({ message: "Préstamo no encontrado" });
-    }
-
-    if (loan.status !== "pending") {
-      return res.status(400).json({ message: "Este préstamo ya fue procesado" });
-    }
-
-    // Subir foto si se envió
-    if (req.file) {
-      loan.photo = req.file.filename;
-    }
-
-    loan.status = "approved";
-    await loan.save();
-
-    // Generar URL completa
-    const photoURL = loan.photo
-      ? `${req.protocol}://${req.get("host")}/uploads/${loan.photo}`
-      : null;
-
-    res.status(200).json({
-      message: "Préstamo aprobado exitosamente",
-      loan: {
-        ...loan.toObject(),
-        photo: photoURL,
-      },
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: "Error al aprobar el préstamo",
-      error: error.message,
-    });
+    res.status(500).json({ message: "Error al obtener los préstamos", error: error.message });
   }
 };
