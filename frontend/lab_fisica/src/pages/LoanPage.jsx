@@ -1,17 +1,20 @@
 import React, { useState } from "react";
-import { useLoanCart } from "../context/loanContext";
-import { createLoanRequest } from "../api/loan";
-import { useNavigate } from "react-router-dom";
-import axios from "../api/axios"; 
-
+import { useLoanCart } from "../context/loanContext"; // Hook personalizado que gestiona el carrito de préstamos
+import { createLoanRequest } from "../api/loan"; // (Importación no utilizada actualmente)
+import { useNavigate } from "react-router-dom"; // Para redireccionar después de crear el préstamo
+import axios from "../api/axios"; // Instancia de Axios con configuración predefinida
 
 const LoanPage = () => {
+  // Hook del contexto que provee los equipos del carrito y funciones para manipularlo
   const { cartItems, updateQuantity, removeFromCart, clearCart } = useLoanCart();
+
+  // Estado para controlar carga, errores y fecha de devolución
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [dateDue, setDateDue] = useState("2025-06-10"); 
-  const navigate = useNavigate();
+  const [dateDue, setDateDue] = useState("2025-06-10"); // Fecha predeterminada
+  const navigate = useNavigate(); // Hook para navegación programática
 
+  // Cambiar cantidad de un equipo en el carrito
   const handleQuantityChange = (id, value) => {
     const quantity = Number(value);
     if (quantity > 0) {
@@ -19,18 +22,20 @@ const LoanPage = () => {
     }
   };
 
+  // Confirmar y enviar el préstamo
   const handleConfirmLoan = async () => {
     if (cartItems.length === 0) {
       alert("El carrito está vacío");
       return;
     }
 
-    // Prepara detalles para el backend
+    // Preparar los detalles del préstamo
     const loanDetails = cartItems.map((item) => ({
       id_equipment: item._id,
       quantity: item.quantity,
     }));
 
+    // Datos a enviar al backend
     const loanData = {
       date_loan: new Date().toISOString(),
       date_due: dateDue,
@@ -40,12 +45,15 @@ const LoanPage = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await axios.post('/loans', loanData);
-    const loanId = response.data.id;
 
-    navigate(`/loans/${loanId}/receipt`);
-      clearCart();
+      // Enviar solicitud de préstamo al backend
+      const response = await axios.post('/loans', loanData);
+      const loanId = response.data.id; // ID del préstamo creado
+
+      navigate(`/loans/${loanId}/receipt`); // Redirigir al recibo del préstamo
+      clearCart(); // Vaciar el carrito después de crear el préstamo
     } catch (err) {
+      // Mostrar errores si falla la solicitud
       setError(err.response?.data?.message || err.message || "Error al crear el préstamo");
     } finally {
       setLoading(false);
@@ -55,11 +63,14 @@ const LoanPage = () => {
   return (
     <div>
       <h2>Carrito de préstamo</h2>
+
+      {/* Mostrar mensaje si no hay equipos en el carrito */}
       {cartItems.length === 0 && <p>No hay equipos en el carrito.</p>}
 
+      {/* Listar equipos en el carrito */}
       {cartItems.map((item) => (
         <div key={item._id} style={{ marginBottom: 10 }}>
-          <strong>{item.name}</strong> - Stock: {item.quantity} {/* Esto es stock? */}
+          <strong>{item.name}</strong> - Stock: {item.quantity} {/* Este campo puede estar mal interpretado si se refiere a stock */}
           <br />
           Cantidad a pedir:{" "}
           <input
@@ -74,6 +85,7 @@ const LoanPage = () => {
         </div>
       ))}
 
+      {/* Fecha de devolución */}
       <div style={{ marginTop: 20 }}>
         <label>
           Fecha de devolución:{" "}
@@ -85,13 +97,20 @@ const LoanPage = () => {
         </label>
       </div>
 
-      <button onClick={handleConfirmLoan} disabled={loading || cartItems.length === 0} style={{ marginTop: 20 }}>
+      {/* Botón para confirmar préstamo */}
+      <button
+        onClick={handleConfirmLoan}
+        disabled={loading || cartItems.length === 0}
+        style={{ marginTop: 20 }}
+      >
         {loading ? "Creando préstamo..." : "Confirmar préstamo"}
       </button>
 
+      {/* Mostrar errores si existen */}
       {error && <p style={{ color: "red" }}>{error}</p>}
     </div>
   );
 };
 
 export default LoanPage;
+

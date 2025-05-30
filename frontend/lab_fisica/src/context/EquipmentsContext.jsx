@@ -5,7 +5,7 @@ import {
     deleteEquipmentRequest,
     getEquipmentRequest,
     updateEquipmentRequest
-} from "../api/equipments";
+} from "./api/equipments";
 
 const EquipmentsContext = createContext();
 
