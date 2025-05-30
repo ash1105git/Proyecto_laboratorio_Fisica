@@ -1,0 +1,49 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules 
+    environment:
+      - NODE_ENV=development
+      - PORT=4000
+      - MONGO_URI=mongodb://mongo:27017/mydatabase
+      - JWT_SECRET=supersecreto
+    networks:
+      - lab_net
+    depends_on:
+      - mongo
+
+  frontend:
+    build:
+      context: ./frontend/lab_fisica
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend/lab_fisica:/app
+      - /app/node_modules 
+    environment:
+      - NODE_ENV=development
+    networks:
+      - lab_net
+    depends_on:
+      - backend
+
+  mongo:
+    image: mongo:6
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - lab_net
+
+volumes:
+  mongo_data:
+
+networks:
+  lab_net:
+    driver: bridge

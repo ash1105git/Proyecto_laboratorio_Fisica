@@ -17,9 +17,11 @@ const userSchema = new mongoose.Schema({
         required: true
     },
     programa: {
-        type: String,
-        required: true  // solo requerido si es estudiante
-    },
+    type: String,
+    required: function () {
+      return this.typeUser === 'student';
+    }
+  },
     typeUser: {
         type: String,
         required: true,
