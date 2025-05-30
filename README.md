@@ -46,10 +46,11 @@ mongo: Contenedor de base de datos MongoDB versión 6, puerto 27017.
 Asegúrate de tener instalados Docker y Docker Compose.
 
 En la raíz del proyecto, ejecuta:
-![alt text](image.png)
-
 
 docker-compose up --build
+
+![image](https://github.com/user-attachments/assets/ec573e3e-8c53-4321-b70b-4df68df310bb)
+
 
 Accede a la app frontend en http://localhost:5173.
 
@@ -62,17 +63,19 @@ Para correr el proyecto localmente sin Docker, sigue estos pasos:
 
 # Backend
 Ve a la carpeta /backend:
-![alt text](image-1.png)
 
 bash
 cd backend
+
+![image](https://github.com/user-attachments/assets/30fc0cf3-67b2-4efa-aa77-8570cf615173)
 
 Instala las dependencias:
 
 bash
 npm install
 
-![alt text](image-2.png)
+![image](https://github.com/user-attachments/assets/0141656e-c92c-459b-8897-4de822446489)
+
 
 Crea un archivo .env con las variables necesarias:
 
@@ -82,14 +85,16 @@ MONGO_URI=mongodb://localhost:27017/mydatabase
 JWT_SECRET=supersecreto
 NODE_ENV=development
 
-![alt text](image-3.png)
+![image](https://github.com/user-attachments/assets/17086b18-9b85-4911-93ea-be7b97e9bf93)
+
 
 Inicia el servidor backend:
 
 bash
 npm run dev
 
-![alt text](image-4.png)
+![image](https://github.com/user-attachments/assets/7cab69dd-87c5-46de-a8e6-41ec3a1bb866)
+
 
 # Frontend
 Ve a la carpeta /frontend/lab_fisica:
@@ -97,14 +102,16 @@ Ve a la carpeta /frontend/lab_fisica:
 bash
 cd frontend/lab_fisica
 
-![alt text](image-5.png)
+![image](https://github.com/user-attachments/assets/4b7b8a8d-64ef-4109-80c4-3428b4d0cea8)
+
 
 Instala las dependencias:
 
 bash
 npm install
 
-![alt text](image-6.png)
+![image](https://github.com/user-attachments/assets/61a8931c-ec9b-4e27-bd87-3087936d37e6)
+
 
 Crea un archivo .env si necesitas configurar variables (por ejemplo VITE_API_URL=http://localhost:4000)
 
@@ -113,11 +120,12 @@ Inicia el frontend en modo desarrollo:
 bash
 npm run dev
 
-![alt text](image-7.png)
+![image](https://github.com/user-attachments/assets/a2c92778-af98-486e-b29f-b24479b67cf8)
+
 
 Accede a la app en http://localhost:5173
 
-#Dependencias Clave
+# Dependencias Clave
 
 # Frontend
 react
